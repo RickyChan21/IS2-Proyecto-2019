@@ -1,0 +1,17 @@
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install mosquitto -y
+sudo apt-get install mosquitto-clients -y
+sudo nano /etc/mosquitto/mosquitto.conf
+
+#Borrar la siguiente linea
+include_dir /etc/mosquitto/conf.d
+
+#Agregar la siguiente linea
+allow_anonymous false
+password_file /etc/mosquitto/pwfile
+listener 1883
+
+sudo mosquitto_passwd -c /etc/mosquitto/pwfile username
+
+sudo reboot

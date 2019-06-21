@@ -14,4 +14,4 @@ listener 1883
 
 sudo mosquitto_passwd -c /etc/mosquitto/pwfile username
 
-sudo reboot
+sudo reboot  //Esto me parece muy útil

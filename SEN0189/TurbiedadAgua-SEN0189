@@ -1,0 +1,54 @@
+//Version serial
+
+#include <Wire.h>
+#include <Servo.h>
+
+Servo servo1;
+//Inicialización de variables
+int senTurb = A0;
+int contServo=0;
+float volt;
+float ntu;
+
+void setup() {
+  Serial.begin(11500); 
+  servo1.attach(4);
+}
+void loop() {
+  volt=0; //voltaje inicial
+  for (int i=0; i<800;i++) //ciclo de lectura pararae voltaje
+  {
+    volt += ((float)analogRead(senTurb)/1023)*5;
+  }
+  volt = volt/800;
+  volt = round_to_dp (volt,2);
+  if (volt>=4){
+    ntu=0;
+  }else{
+    if(volt<2.5)
+    {
+      ntu=3000;
+      contServo +=1;
+    }else{
+    ntu= -1120.4*square(volt)+5742.3*volt-4353.8; 
+    contServo +=1;
+    } 
+  }
+  if (contServo>=20)
+  {
+    servo1.write(180);
+  }
+  Serial.print(volt);
+  Serial.println(" V");
+
+  Serial.print(ntu);
+  Serial.println(" NTU");
+  delay(500);
+}
+
+float round_to_dp(float in_value, int decimal_place)
+{
+  float multiplier = powf(10.0f, decimal_place);
+  in_value = roundf (in_value*multiplier)/multiplier;
+  return in_value;
+}

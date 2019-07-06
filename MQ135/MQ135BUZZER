@@ -1,89 +1,77 @@
+#include <Wire.h>
 #include <ESP8266WiFi.h>
-#include <PubSubClient.h>
+#include "Adafruit_MQTT.h"
+#include "Adafruit_MQTT_Client.h"
+ 
+ADC_MODE(ADC_VCC);
+ 
+#define WLAN_SSID       "CWC-9307524"
+#define WLAN_PASS       "mffksgMG57rw"
+ 
+#define HOST        "192.168.0.32"
+#define PORT        1883
+#define USERNAME    "username"
+#define PASSWORD    "12345678"*/
+ 
+const int intervall = 10000;
+int pin_mq = 5;  //D1
+int buzzer = 0; //D3
+int x =3;
+int fan = 4; //D2
 
-int pin_mq = 5;
-int buzzer = 0;
-int x =0;
-int fan = 4;
-
-const char* ssid = "CWC-9307524";                   // wifi ssid
-const char* password =  "mffksgMG57rw";         // wifi password
-const char* mqttServer = "192.168.0.30";    // IP adress Raspberry Pi
-const int mqttPort = 1883;
-const char* mqttUser = "username";      // if you don't have MQTT Username, no need input
-const char* mqttPassword = "12345678";  // if you don't have MQTT Password, no need input
-
-WiFiClient espClient;
-PubSubClient client(espClient);
-
+WiFiClient client;
+Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
+Adafruit_MQTT_Publish gas = Adafruit_MQTT_Publish(&mqtt, "gas");
+void MQTT_connect();
+ 
+ 
 void setup() {
-
+  //Conexion al Core
+ WiFi.forceSleepWake();
+  WiFi.mode(WIFI_STA);
   Serial.begin(115200);
+  Serial.print("Connecting to ");
+  Serial.println(WLAN_SSID);
+ 
+  WiFi.begin(WLAN_SSID, WLAN_PASS);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+ 
+  Serial.println();
+  Serial.println("WiFi connected");
+  Serial.println("IP address: "); Serial.println(WiFi.localIP());
+  MQTT_connect();
+  
+  //Programacion del sistema
   pinMode(pin_mq, INPUT);
   pinMode(buzzer, OUTPUT);
   pinMode(fan, OUTPUT);
- WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    
-    delay(500);
-    Serial.println("Connecting to WiFi..");
-  }
-  Serial.println("Connected to the WiFi network");
-
-  client.setServer(mqttServer, mqttPort);
-  client.setCallback(callback);
-
-  while (!client.connected()) {
-    Serial.println("Connecting to MQTT...");
-
-    if (client.connect("ESP8266Client", mqttUser, mqttPassword )) {
-
-      Serial.println("connected");
-
-    } else {
-
-      Serial.print("failed with state ");
-      Serial.print(client.state());
-      delay(2000);
-
-    }
-  }
-
-//  client.publish("esp8266", "Hello Raspberry Pi");
-//  client.subscribe("esp8266");
-
 }
-
-void callback(char* topic, byte* payload, unsigned int length) {
-
-  Serial.print("Message arrived in topic: ");
-  Serial.println(topic);
-
-  Serial.print("Message:");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-
-  Serial.println();
-  Serial.println("-----------------------");
-
-}
-
-void loop() {
-boolean mq_estado = digitalRead(pin_mq); //Leemos el sensor
+ 
+void loop()
+{
+ boolean mq_estado = digitalRead(pin_mq); //Leemos el sensor
  if(mq_estado) //si la salida del sensor es 1
   {
-    client.publish("esp8266", "Sin presencia de gas");
-    x=0;
-  } 
+    while(x!=0)
+    {
+     gas.publish("Sin presencia de gas");
+     x=0;
+    }
+  }
   else //si la salida del sensor es 0
   {
-    client.publish("esp8266", "Gas Dectectado");
-    x=1;
-    
+    while(x!=1)
+    {
+       gas.publish("Gas Detectado");
+       x=1;
+    }
   }
- if (x==1)
+  delay(5000);
+  if (x==1)
  {
      digitalWrite(buzzer,HIGH); //emite sonido
      digitalWrite(fan,HIGH);  //Encender el abanico
@@ -92,10 +80,30 @@ boolean mq_estado = digitalRead(pin_mq); //Leemos el sensor
   if (x==0)
  {
      digitalWrite(buzzer,LOW); //no emite sonido
+     delay(2000);
      digitalWrite(fan,LOW); //apagar el abanico
      delay(500); //espera medio segundo
  }
- client.subscribe("esp8266");
-  delay(300); 
-  client.loop();
+}
+ 
+  void MQTT_connect() {
+  int8_t ret;
+  if (mqtt.connected()) {
+    return;
+  }
+ 
+  Serial.print("Connecting to MQTT... ");
+  uint8_t retries = 3;
+  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+       Serial.println(mqtt.connectErrorString(ret));
+       Serial.println("Retrying MQTT connection in 5 seconds...");
+       mqtt.disconnect();
+       delay(5000);  // wait 5 seconds
+       retries--;
+       if (retries == 0) {
+         // basically die and wait for WDT to reset me
+         while (1);
+       }
+  }
+  Serial.println("MQTT Connected!");
 }

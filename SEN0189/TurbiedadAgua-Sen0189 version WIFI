@@ -1,0 +1,101 @@
+//Version WIFI
+#include <Wire.h>
+#include <ESP8266WiFi.h>
+#include "Adafruit_MQTT.h"
+#include "Adafruit_MQTT_Client.h"
+ 
+ADC_MODE(ADC_VCC);
+ 
+#define WLAN_SSID       "CWC-9307524"
+#define WLAN_PASS       "mffksgMG57rw"
+ 
+#define HOST        "192.168.0.32"
+#define PORT        1883
+#define USERNAME    "username"
+#define PASSWORD    "12345678"
+
+WiFiClient client;
+Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
+Adafruit_MQTT_Publish voltaje = Adafruit_MQTT_Publish(&mqtt, "voltaje");
+Adafruit_MQTT_Publish turbiedad = Adafruit_MQTT_Publish(&mqtt, "turbiedad");
+void MQTT_connect();
+
+//Inicialización de variables
+int senTurb = A0;
+float volt;
+float ntu;
+
+void setup() {
+  Serial.begin(11500);
+   //Conexion al Core
+ WiFi.forceSleepWake();
+  WiFi.mode(WIFI_STA);
+  Serial.begin(115200);
+  Serial.print("Connecting to ");
+  Serial.println(WLAN_SSID);
+ 
+  WiFi.begin(WLAN_SSID, WLAN_PASS);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+ 
+  Serial.println();
+  Serial.println("WiFi connected");
+  Serial.println("IP address: "); Serial.println(WiFi.localIP());
+  MQTT_connect(); 
+}
+void loop() {
+  volt=0; //voltaje inicial
+  for (int i=0; i<800;i++) //ciclo de lectura pararae voltaje
+  {
+    volt += ((float)analogRead(senTurb)/1023)*5;
+  }
+  volt = volt/800;
+  volt = round_to_dp (volt,2);
+  if (volt>=4){
+    ntu=0;
+  }else{
+    if(volt<2.5)
+    {
+      ntu=3000;
+    }else{
+    ntu= -1120.4*sq(volt)+5742.3*volt-4353.8; 
+    } 
+  }
+  voltaje.publish(volt);
+ 
+  turbiedad.publish(ntu);
+
+  delay(60000);
+}
+
+float round_to_dp(float in_value, int decimal_place)
+{
+  float multiplier = powf(10.0f, decimal_place);
+  in_value = roundf (in_value*multiplier)/multiplier;
+  return in_value;
+}
+
+ void MQTT_connect() {
+  int8_t ret;
+  if (mqtt.connected()) {
+    return;
+  }
+ 
+  Serial.print("Connecting to MQTT... ");
+  uint8_t retries = 3;
+  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+       Serial.println(mqtt.connectErrorString(ret));
+       Serial.println("Retrying MQTT connection in 5 seconds...");
+       mqtt.disconnect();
+       delay(5000);  // wait 5 seconds
+       retries--;
+       if (retries == 0) {
+         // basically die and wait for WDT to reset me
+         while (1);
+       }
+  }
+  Serial.println("MQTT Connected!");
+}

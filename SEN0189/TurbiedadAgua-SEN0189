@@ -1,4 +1,4 @@
-//Version serial
+//Version Serial inicial
 
 #include <Wire.h>
 #include <Servo.h>

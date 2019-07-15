@@ -1,0 +1,75 @@
+#include <Wire.h> "Librerias para las conecciones del BME 280";
+#include <ESP8266WiFi.h>
+#include "Adafruit_MQTT.h"
+#include "Adafruit_MQTT_Client.h"
+
+
+#define WLAN_SSID       "Skynet"
+#define WLAN_PASS       "2!,y^5#t5<;T$eC*zBUb4BM)'[N9Em>G"
+
+#define HOST        "172.20.160.108"
+#define PORT        1883
+#define USERNAME    "username"
+#define PASSWORD    "12345678" 
+
+WiFiClient client;
+Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
+
+
+Adafruit_MQTT_Publish Volta = Adafruit_MQTT_Publish(&mqtt, "Volta");
+int pinSonda = A0;
+float escala = 100; //100 para voltios, 0.1 par
+void MQTT_connect();
+void setup() {
+  WiFi.forceSleepWake();
+  WiFi.mode(WIFI_STA);
+  Serial.begin(115200);
+  Serial.print("Connecting to ");
+  Serial.println(WLAN_SSID);
+
+  WiFi.begin(WLAN_SSID, WLAN_PASS);
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  Serial.println();
+  Serial.println("WiFi connected");
+  Serial.println("IP address: "); Serial.println(WiFi.localIP());
+  MQTT_connect();
+  pinMode(pinSonda, INPUT);
+}
+ void loop() {
+//Voltimetro LOOP
+  float lectura = analogRead(pinSonda); 
+  lectura = map(lectura, 0, 1023, 0, 500); 
+  float voltaje = lectura/escala; 
+  Volta.publish(voltaje);
+  Serial.print(voltaje);
+  Serial.println(" V");
+  delay(60000);
+
+
+ }
+  void MQTT_connect() {
+  int8_t ret;
+  if (mqtt.connected()) {
+    return;
+  }
+ 
+  Serial.print("Connecting to MQTT... ");
+  uint8_t retries = 3;
+  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+       Serial.println(mqtt.connectErrorString(ret));
+       Serial.println("Retrying MQTT connection in 5 seconds...");
+       mqtt.disconnect();
+       delay(5000);  // wait 5 seconds
+       retries--;
+       if (retries == 0) {
+         // basically die and wait for WDT to reset me
+         while (1);
+       }
+  }
+  Serial.println("MQTT Connected!");
+}

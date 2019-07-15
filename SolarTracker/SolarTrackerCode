@@ -1,75 +1,109 @@
-@/*Cabecera donde se declaran las variables a usar por las fotoresistencias y una constante para usar como delay*/
-int topleft;
-int topright;
-int downleft;
-int downright;
-int waittime = 1;
+#include <Servo.h>
 
-/*En el setup asignamos dos salida analogas a los pines 9 y 10 
-ICR1 es el rango max de las fotoresistencias
-OCR1A rango minimo 
-OCR1B rango medio*/
-void setup() {
-  pinMode(9, OUTPUT);
-  pinMode(10, OUTPUT);
-  //TCCR1A = 0;
-  //TCCR1A = (1 << COM1A1) | (1 << COM1B1) | (1 << WGM11);
-  //TCCR1B = 0;
-  //TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS11);
-  ICR1 = 40000;
-  OCR1A = 3000;
-  OCR1B = 3600;
-}
-/*En el loop asignamos como entradas analogicas del arduino a cada fotoresistencia
-y cada ciclo anidado representa la direccion que debe seguir el sistema*/
-void loop() {
-  topleft = analogRead(A0);
-  topright = analogRead(A1);
-  downleft = analogRead(A2);
-  downright = analogRead(A3);
+//Voltimetro
+int pinSonda = A5;
+float escala = 100; //100 para voltios, 0.1 para milivoltios
 
-  if (topleft > topright) {
-    OCR1A = OCR1A + 1;
-    delay(waittime);
+//defining Servos
+Servo servohori;
+int servoh = 0;
+int servohLimitHigh = 160;
+int servohLimitLow = 20;
+
+Servo servoverti; 
+int servov = 0; 
+int servovLimitHigh = 160;
+int servovLimitLow = 20;
+//Assigning LDRs
+int ldrtopl = 2; //ARRIBA IZQUIERDA LDR AMARILLO
+int ldrtopr = 1; //ARRIBA DERECHA LDR MORADO
+int ldrbotl = 3; // ABAJO IZQUIERDA LDR VERDE
+int ldrbotr = 0; // ABAJO DERECHA LDR AZUL
+
+ void setup () 
+ {
+  //Voltimetro
+  Serial.begin(19200); 
+  pinMode(pinSonda, INPUT);
+
+  //Servos
+  servohori.attach(10); //SERVO HORIZONTAL
+  servohori.write(0);   
+  servoverti.attach(9);  //SERVO VERTICAL
+  servoverti.write(0);
+  delay(500);
+ }
+
+void loop()
+{
+
+  //Voltimetro
+  float lectura = analogRead(pinSonda); 
+  lectura = map(lectura, 0, 1023, 0, 500); 
+  float voltaje = lectura/escala; 
+  Serial.print(voltaje);
+  Serial.println(" V");
+  delay(500);
+
+  
+  servoh = servohori.read();
+  servov = servoverti.read();
+  //capturing analog values of each LDR
+  int topl = analogRead(ldrtopl);
+  int topr = analogRead(ldrtopr);
+  int botl = analogRead(ldrbotl);
+  int botr = analogRead(ldrbotr);
+  // calculating average
+  int avgtop = (topl + topr) / 2; //average of top LDRs
+  int avgbot = (botl + botr) / 2; //average of bottom LDRs
+  int avgleft = (topl + botl) / 2; //average of left LDRs
+  int avgright = (topr + botr) / 2; //average of right LDRs
+
+  if (avgtop < avgbot)
+  {
+    servoverti.write(servov +1);
+    if (servov > servovLimitHigh) 
+     { 
+      servov = servovLimitHigh;
+     }
+    delay(10);
   }
-  if (downleft > downright) {
-    OCR1A = OCR1A + 1;
-    delay(waittime);
+  else if (avgbot < avgtop)
+  {
+    servoverti.write(servov -1);
+    if (servov < servovLimitLow)
+  {
+    servov = servovLimitLow;
   }
-  if (topleft < topright) {
-    OCR1A = OCR1A - 1;
-    delay(waittime);
+    delay(10);
   }
-  if (downleft < downright) {
-    OCR1A = OCR1A - 1;
-    delay(waittime);
+  else 
+  {
+    servoverti.write(servov);
   }
-  if (OCR1A > 4000) {
-    OCR1A = 4000;
+  
+  if (avgleft > avgright)
+  {
+    servohori.write(servoh +1);
+    if (servoh > servohLimitHigh)
+    {
+    servoh = servohLimitHigh;
+    }
+    delay(10);
   }
-  if (OCR1A < 2000) {
-    OCR1A = 2000;
+  else if (avgright > avgleft)
+  {
+    servohori.write(servoh -1);
+    if (servoh < servohLimitLow)
+     {
+     servoh = servohLimitLow;
+     }
+    delay(10);
   }
-  if (topleft > downleft) {
-    OCR1B = OCR1B - 1;
-    delay(waittime);
+  else 
+  {
+    servohori.write(servoh);
   }
-  if (topright > downright) {
-    OCR1B = OCR1B - 1;
-    delay(waittime);
-  }
-  if (topleft < downleft) {
-    OCR1B = OCR1B + 1;
-    delay(waittime);
-  }
-  if (topright < downright) {
-    OCR1B = OCR1B + 1;
-    delay(waittime);
-  }
-  if (OCR1B > 4200) {
-    OCR1B = 4200;
-  }
-  if (OCR1B < 3000) {
-    OCR1B = 3000;
-  }
+  delay(50);
 }
+//SALUDOS CHAVAVALES, SALUDOS A MI MAMA HASTA BUGABA =)

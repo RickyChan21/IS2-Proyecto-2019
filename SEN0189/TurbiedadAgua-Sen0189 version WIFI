@@ -1,101 +1,103 @@
 //Version WIFI
-#include <Wire.h>
-#include <ESP8266WiFi.h>
-#include "Adafruit_MQTT.h"
-#include "Adafruit_MQTT_Client.h"
+#include <Wire.h>  //se incluye la libreria Wire
+#include <ESP8266WiFi.h> //se incluye la librería para el ESP8266
+#include "Adafruit_MQTT.h" //se incluyen la librerias para el uso del Adafruit MQTT
+#include "Adafruit_MQTT_Client.h" 
  
-ADC_MODE(ADC_VCC);
+ADC_MODE(ADC_VCC);  //Fija el ADC para leer VCC 
  
-#define WLAN_SSID       "CWC-9307524"
-#define WLAN_PASS       "mffksgMG57rw"
+#define WLAN_SSID       "Skynet"                              //Se definen las SSID y la Contraseña utilizadas para conectarse a dicha red
+#define WLAN_PASS       "2!,y^5#t5<;T$eC*zBUb4BM)'[N9Em>G"
  
-#define HOST        "192.168.0.32"
-#define PORT        1883
-#define USERNAME    "username"
+#define HOST        "172.20.160.108"        //se define la dirección IP del Host (router)
+#define PORT        1883                    //se define el puerto de enlace
+#define USERNAME    "username"              //se deja la configuración del usuario y contraseña fijadas
 #define PASSWORD    "12345678"
 
 WiFiClient client;
-Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
-Adafruit_MQTT_Publish voltaje = Adafruit_MQTT_Publish(&mqtt, "voltaje");
-Adafruit_MQTT_Publish turbiedad = Adafruit_MQTT_Publish(&mqtt, "turbiedad");
-void MQTT_connect();
+Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);  //se define el cliente del MQTT, con su host, puerto, usuario y contraseña
+Adafruit_MQTT_Publish voltaje = Adafruit_MQTT_Publish(&mqtt, "voltaje");      //Topic utilizado para vincular los datos que se publican en la base de datos
+Adafruit_MQTT_Publish turbiedad = Adafruit_MQTT_Publish(&mqtt, "turbiedad");  //Topic utilizado para vincular los datos que se publican en la base de datos
+void MQTT_connect();    //se declara una función que representa la conexión con el protocolo MQTT
 
-//Inicialización de variables
-int senTurb = A0;
-float volt;
-float ntu;
+//Declaración de variables
+float volt;       //se declara una variable flotante para representar el voltaje
+float ntu;        //se declara una variable flotante para representar la turbiedad medida en NTU
+int sensorTurb = 2;  //se declara una variable que guarda el pin analógico utilizado A0 (pin 2)
 
 void setup() {
-  Serial.begin(11500);
-   //Conexion al Core
- WiFi.forceSleepWake();
+  Serial.begin(115200);     //se inicia la comunicación serial en 115200 baudios
+  WiFi.forceSleepWake();
   WiFi.mode(WIFI_STA);
-  Serial.begin(115200);
-  Serial.print("Connecting to ");
-  Serial.println(WLAN_SSID);
+  
+  Serial.print("Connecting to "); //impresión indicando a que red se esta conectando
+  Serial.println(WLAN_SSID);      //se imprime el nombre de la red
  
-  WiFi.begin(WLAN_SSID, WLAN_PASS);
-  while (WiFi.status() != WL_CONNECTED)
+  WiFi.begin(WLAN_SSID, WLAN_PASS); //se inicializa la conexión con el SSID y la Contraseña puesta
+  while (WiFi.status() != WL_CONNECTED) //Condición usada para definir mientras el enlace con el Wifi este aun sin conexión
   {
-    delay(500);
-    Serial.print(".");
+    delay(500);                         //retraso de medio segundo
+    Serial.print(".");                  //mientras esto pase, imprime un punto
   }
  
   Serial.println();
-  Serial.println("WiFi connected");
-  Serial.println("IP address: "); Serial.println(WiFi.localIP());
-  MQTT_connect(); 
+  Serial.println("WiFi connected");     //Cuando la conexión se realiza correctamente, se muestra que está conectado
+  Serial.println("IP address: "); Serial.println(WiFi.localIP());  //Se imprime la dirección IP local 
+  MQTT_connect(); //se ejecuta la función de conexión del MQTT
 }
 void loop() {
-  volt=0; //voltaje inicial
-  for (int i=0; i<800;i++) //ciclo de lectura pararae voltaje
-  {
-    volt += ((float)analogRead(senTurb)/1023)*5;
+  volt = 0;               //Se inicializa el voltaje en 0
+    for(int i=0; i<800; i++)    //El voltage del sensor es ruidoso
+    {                           //así que se toma 800 muestras y luego se promedian
+        volt += analogRead(sensorTurb) * (3.3/1023.0); //Convierte la lectura analógica(0~1023)a voltaje  (0 ~ 3.3V) y se va sumando
+    }
+  volt = volt/800;         //Se divide el voltaje entre la cantidad de de muestras (800) para encontrar el voltaje individual
+  volt = round_to_dp(volt,1);   //Se redondea el número de voltios a 1 decimal
+  if (volt>3.3){        //Condición fijada a que si el voltaje medido este mayor a 3.3V 
+    ntu=0;              //si se cumple la condición, el valor de NTU es 0
+  }else{  //Sino se cumple
+    if(volt<2.5){    //Se pregunta si el voltaje es menor a 2.5V,
+      ntu=3000;      //así se fuja cada lectura por debajo de los 2.5V con 3000 NTU
+    }else{ //Sino no es uno ni otro entonces
+      ntu= -1120.4*sq(volt)+5742.3*volt-4353.8; // Calcula el actual nivel de NTU que viene dada por la función
+    }                                          //y = -1120.4*x^2 + 5742.3*x - 4353.8 donde 'x' es el valor del voltaje 
   }
-  volt = volt/800;
-  volt = round_to_dp (volt,2);
-  if (volt>=4){
-    ntu=0;
-  }else{
-    if(volt<2.5)
-    {
-      ntu=3000;
-    }else{
-    ntu= -1120.4*sq(volt)+5742.3*volt-4353.8; 
-    } 
-  }
-  voltaje.publish(volt);
+  voltaje.publish(volt);    //se envia la información del voltaje para ser publicado por el core
+  Serial.print(volt);       //se imprime el voltaje por serial
+  Serial.println(" V");     //se imprime la unidad de voltaje
  
-  turbiedad.publish(ntu);
+  turbiedad.publish(ntu);  //se envia la información del turbiedad para ser publicado por el core
+  Serial.print(ntu);       //se imprime el nivel de NTU por serial
+  Serial.println(" NTU");  //se imprime la unidad de NTU
 
-  delay(60000);
+  delay(10000);  //retraso de 1 minuto
 }
 
-float round_to_dp(float in_value, int decimal_place)
+float round_to_dp(float in_value, int decimal_place)  //función para redondeo de partes decimales
 {
-  float multiplier = powf(10.0f, decimal_place);
-  in_value = roundf (in_value*multiplier)/multiplier;
-  return in_value;
+  float multiplier = powf(10.0f, decimal_place);  //se define un multiplicador con base 10, potencia que sería el valor de la parte decimal enviada
+  in_value = roundf (in_value*multiplier)/multiplier; //el valor enviado a redondear se le aplica un redondeo flotante multiplicando el valor por el multiplicador, y posteriormente se divide entre el multiplicador
+  return in_value; //se regresa el valor nuevo redondeado
 }
 
- void MQTT_connect() {
-  int8_t ret;
-  if (mqtt.connected()) {
-    return;
+ void MQTT_connect() {		//función para conexión del MQTT
+  int8_t ret;			//se declara la variable ret como un entero de 8 bits
+  if (mqtt.connected()) {   //si el cliente MQTT está conectado 
+    return;                 
   }
  
-  Serial.print("Connecting to MQTT... ");
-  uint8_t retries = 3;
-  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
-       Serial.println(mqtt.connectErrorString(ret));
-       Serial.println("Retrying MQTT connection in 5 seconds...");
-       mqtt.disconnect();
-       delay(5000);  // wait 5 seconds
-       retries--;
-       if (retries == 0) {
-         // basically die and wait for WDT to reset me
+  Serial.print("Connecting to MQTT... ");  //mensaje indicando la conexión con el protocolo MQTT
+  uint8_t retries = 3;   //se declara la variable de intentos en 3
+  while ((ret = mqtt.connect()) != 0) { // la conexión enviará 0 cuando este conectado
+       Serial.println(mqtt.connectErrorString(ret));   //se imprime un mensaje de error
+       Serial.println("Retrying MQTT connection in 5 seconds...");  //se imprime un mensaje de reconexión
+       mqtt.disconnect();  //se desconecta el MQTT
+       delay(5000);  // retraso de 5 segundos
+       retries--;   // se disminuye el conteo
+       if (retries == 0) { si el conteo de intentos es 0
+         // basicamente muere y espera por un reseteo
          while (1);
        }
   }
-  Serial.println("MQTT Connected!");
+  Serial.println("MQTT Connected!");          //se imprime que la conexión del MQTT está establecida
 }

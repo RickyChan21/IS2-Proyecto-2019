@@ -1,10 +1,11 @@
 #include <Wire.h>
+//Libreria De ingeniería en Software
 #include <ESP8266WiFi.h>
 #include "Adafruit_MQTT.h"
 #include "Adafruit_MQTT_Client.h"
  
 ADC_MODE(ADC_VCC);
- 
+ //Valores prestablecidos del Core
 #define WLAN_SSID       "CWC-9307524"
 #define WLAN_PASS       "mffksgMG57rw"
  
@@ -14,14 +15,18 @@ ADC_MODE(ADC_VCC);
 #define PASSWORD    "12345678"*/
  
 const int intervall = 10000;
-int pin_mq = 5;  //D1
-int buzzer = 0; //D3
+//Variables para declarar sensores de arduino
+int pin_mq = 5;  //D1, número pin del NodeMCU
+int buzzer = 0; //D3, número pin del NodeMCU
 int x =3;
-int fan = 4; //D2
+int fan = 4; //D2, número pin del NodeMCU
 
 WiFiClient client;
+//Nombre del cliente a conectar (Core)
 Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
+//Datos del susbriptor (MQ135)
 Adafruit_MQTT_Publish gas = Adafruit_MQTT_Publish(&mqtt, "gas");
+//LLamado de la Función para conectarse al core como suscriptor
 void MQTT_connect();
  
  
@@ -29,55 +34,55 @@ void setup() {
   //Conexion al Core
  WiFi.forceSleepWake();
   WiFi.mode(WIFI_STA);
-  Serial.begin(115200);
+  Serial.begin(115200);        // Puerto del monitor serial
   Serial.print("Connecting to ");
   Serial.println(WLAN_SSID);
  
   WiFi.begin(WLAN_SSID, WLAN_PASS);
   while (WiFi.status() != WL_CONNECTED)
   {
+  //Mientras no haya conexión al core, imprimira puntos (.) cada medio segundo
     delay(500);
     Serial.print(".");
   }
  
   Serial.println();
-  Serial.println("WiFi connected");
+  Serial.println("WiFi connected");      //Conexion wifi lograda
   Serial.println("IP address: "); Serial.println(WiFi.localIP());
-  MQTT_connect();
+  MQTT_connect();                 //Conexión del susbriptor lograda
   
-  //Programacion del sistema
-  pinMode(pin_mq, INPUT);
-  pinMode(buzzer, OUTPUT);
-  pinMode(fan, OUTPUT);
+  //Programacion de los pines digitales 
+  pinMode(pin_mq, INPUT);    //MQ135, Detector de gas
+  pinMode(buzzer, OUTPUT);   //Zumbador
+  pinMode(fan, OUTPUT);      //Ventilador 
 }
  
 void loop()
 {
- boolean mq_estado = digitalRead(pin_mq); //Leemos el sensor
+ boolean mq_estado = digitalRead(pin_mq); //Se define una variable de tipo booleano y leemos el sensor digitalmente
  if(mq_estado) //si la salida del sensor es 1
   {
-    while(x!=0)
+    while(x!=0) //Ciclo de control para no imprimir demasiado, si x=0 no seguira con la siguiente acción
     {
-     gas.publish("Sin presencia de gas");
-     x=0;
+     gas.publish("Sin presencia de gas");  //funcion para poder publicar en el core, para el monitor serial se requiere "Serial.printl()"
+     x=0;   //Se iguala a 0 la variable de control
     }
   }
   else //si la salida del sensor es 0
   {
-    while(x!=1)
+    while(x!=1) //Ciclo de control, si x=1 no seguira con la siguiente acción
     {
-       gas.publish("Gas Detectado");
-       x=1;
+       gas.publish("Gas Detectado"); //Publicación al Core
+       x=1;  //Se iguala a 1 la variable de control
     }
-  }
-  delay(5000);
-  if (x==1)
+  } 
+  if (x==1) //Si x es 1, entonces seguirá a la siguiente acción
  {
      digitalWrite(buzzer,HIGH); //emite sonido
      digitalWrite(fan,HIGH);  //Encender el abanico
      delay(500); //espera medio segundo
  }
-  if (x==0)
+  if (x==0)  //Si x es 0, entonces seguira a la siguiente acción
  {
      digitalWrite(buzzer,LOW); //no emite sonido
      delay(2000);
@@ -85,13 +90,12 @@ void loop()
      delay(500); //espera medio segundo
  }
 }
- 
+ //Funcion para conexión al core como suscriptor 
   void MQTT_connect() {
   int8_t ret;
   if (mqtt.connected()) {
     return;
   }
- 
   Serial.print("Connecting to MQTT... ");
   uint8_t retries = 3;
   while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected

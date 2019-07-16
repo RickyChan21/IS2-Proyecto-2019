@@ -1,87 +1,87 @@
-#include <Wire.h>
-#include <ESP8266WiFi.h>
-#include "Adafruit_MQTT.h"
-#include "Adafruit_MQTT_Client.h"
+#include <Wire.h> //se agrega la libreria Wire.h, que permite comunicarse con dispositivos I2C/TWI
+#include <ESP8266WiFi.h> //se incluye la libreria del nodemcu esp8266 para que el dispositivo que usamos funcione
+#include "Adafruit_MQTT.h" //se incluye la libreria Adafruit_MQTT para poder publicar nuestros datos en el core
+#include "Adafruit_MQTT_Client.h" 
 
 
-ADC_MODE(ADC_VCC);
+ADC_MODE(ADC_VCC); //Fija el ADC para leer VCC 
 
-#define WLAN_SSID       "CWC-9307524"
-#define WLAN_PASS       "mffksgMG57rwbhjkheshjkdekh"
+#define WLAN_SSID       "CWC-9307524" //Se define la SSID utilizada para conectarse a la red
+#define WLAN_PASS       "mffksgMG57rwbhjkheshjkdekh"//Se define la Contraseña utilizada para conectarse a dicha red
 
-#define HOST        "192.168.0.32"
-#define PORT        1883
-#define USERNAME    "username"
+#define HOST        "192.168.0.32" //se define la dirección IP del Host (router)
+#define PORT        1883           //se define el puerto de enlace
+#define USERNAME    "username"    //se deja la configuración del usuario y contraseña fijadas
 #define PASSWORD "12345678" 
 
 WiFiClient client;
-Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
+Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD); //se define el cliente del MQTT, con su host, puerto, usuario y contraseña
 
-#define LIGHT 04 // define pint 4 for sensor
-#define RELAY 14 // define pin 14 as for relay
+#define LIGHT 04 // define el pin 4 para el sensor de luz
+#define RELAY 14 // define el pin 14 para el relay
 
-Adafruit_MQTT_Publish mensaje = Adafruit_MQTT_Publish(&mqtt, "mensaje");
-void MQTT_connect();
+Adafruit_MQTT_Publish mensaje = Adafruit_MQTT_Publish(&mqtt, "mensaje"); //Topic utilizado para vincular los datos que se publican en la base de datos
+void MQTT_connect(); //se declara una función que representa la conexión con el protocolo MQTT
 
 void setup() {
   WiFi.forceSleepWake();
   WiFi.mode(WIFI_STA);
-  Serial.begin(115200);
-  Serial.print("Connecting to ");
-  Serial.println(WLAN_SSID);
+  Serial.begin(115200); //se inicia la comunicación serial en 115200 baudios
+  Serial.print("Connecting to "); //se inicia la comunicación serial en 115200 baudios
+  Serial.println(WLAN_SSID); //se imprime el nombre de la red
 
-  WiFi.begin(WLAN_SSID, WLAN_PASS);
-  while (WiFi.status() != WL_CONNECTED) 
+  WiFi.begin(WLAN_SSID, WLAN_PASS); //se inicializa la conexión con el SSID y la Contraseña puesta
+  while (WiFi.status() != WL_CONNECTED) //Condición usada para definir mientras el enlace con el Wifi este aun sin conexión
   {
-    delay(500);
-    Serial.print(".");
+    delay(500); //retraso de medio segundo
+    Serial.print("."); //se imprime un punto mientras haya retraso
   }
   
   Serial.println();
-  Serial.println("WiFi connected");
-  Serial.println("IP address: "); Serial.println(WiFi.localIP());
-  MQTT_connect();
+  Serial.println("WiFi connected"); // se muestra que está conectado al wifi
+  Serial.println("IP address: "); Serial.println(WiFi.localIP()); //Se imprime la dirección IP local
+  MQTT_connect(); //se ejecuta la función de conexión del MQTT
 
-  pinMode(LIGHT, INPUT_PULLUP);// define pin as Input  sensor
-  pinMode(RELAY, OUTPUT);// define pin as OUTPUT for relay
+  pinMode(LIGHT, INPUT_PULLUP);// define el pin como un Input  sensor
+  pinMode(RELAY, OUTPUT);// define el pin como OUTPUT para el relay
 }
 
 void loop() {
-  int L =digitalRead(LIGHT);// read the sensor 
+  int L =digitalRead(LIGHT);// lee el sensor 
       if(L == 1){
     Serial.println(" light is OFF");
-    digitalWrite(RELAY,HIGH);// turn the relay ON
-    mensaje.publish("La luz esta encendida");
+    digitalWrite(RELAY,HIGH);// enciende el relay
+    mensaje.publish("La luz esta encendida"); //envia al core la informacion de que la luz se encuentra encendida
   }
   else{
 
      Serial.println(" light is ON");
-     digitalWrite(RELAY,LOW);// turn the relay OFF
-     mensaje.publish("La luz esta apagada");
+     digitalWrite(RELAY,LOW);// apaga el relay
+     mensaje.publish("La luz esta apagada"); //envia al core la informacion de que la luz está apagada
   }
 
 
-  delay(60000);
+  delay(60000); //hace la lectura del sensor y el envio de la información cada minuto
 }
 
- void MQTT_connect() {
-  int8_t ret;
-  if (mqtt.connected()) {
+ void MQTT_connect() {  //función para conexión del MQTT
+  int8_t ret;           //se declara la variable ret como un entero de 8 bits
+  if (mqtt.connected()) { //si el cliente MQTT está conectado 
     return;
   }
  
-  Serial.print("Connecting to MQTT... ");
-  uint8_t retries = 3;
-  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
-       Serial.println(mqtt.connectErrorString(ret));
-       Serial.println("Retrying MQTT connection in 5 seconds...");
-       mqtt.disconnect();
-       delay(5000);  // wait 5 seconds
-       retries--;
-       if (retries == 0) {
-         // basically die and wait for WDT to reset me
+  Serial.print("Connecting to MQTT... "); //indica la conexion con el protocolo MQTT
+  uint8_t retries = 3; //indica el numero de intentos 
+  while ((ret = mqtt.connect()) != 0) { // la conexión enviará 0
+       Serial.println(mqtt.connectErrorString(ret)); //imprime un mensaje de error
+       Serial.println("Retrying MQTT connection in 5 seconds..."); //imprime un mensaje de reconexión
+       mqtt.disconnect(); //se desconecta el MQTT
+       delay(5000);  //espera 5 segundos
+       retries--; //disminuye el conteo de intentos
+       if (retries == 0) { //si el conteo de intentos llega a 0
+         // basicamente muere y espera a que sea reseteado
          while (1);
        }
   }
-  Serial.println("MQTT Connected!");
+  Serial.println("MQTT Connected!"); //se imprime un mensaje de conexión al MQTT
 }

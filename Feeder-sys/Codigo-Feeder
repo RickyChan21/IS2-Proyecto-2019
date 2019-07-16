@@ -1,0 +1,96 @@
+#include <Wire.h>
+#include <ESP8266WiFi.h>
+#include <Adafruit_MQTT.h>//Librería para conexion del protocolo MQTT
+#include <Adafruit_MQTT_Client.h>
+#include <Servo.h> //Incluimos la Libreria de Servo Para porder Utilizar Servos
+const int buzzer = 14; //buzzer to arduino pin 14
+Servo ser1;
+
+ADC_MODE(ADC_VCC);
+//Valores Predeterminados Para la Conexion al Core
+#define WLAN_SSID       "Skynet"
+#define WLAN_PASS       "2!,y^5#t5<;T$eC*zBUb4BM)'[N9Em>G"
+
+#define HOST        "172.20.160.108"
+#define PORT        1883
+#define USERNAME    "username"
+#define PASSWORD    "12345678" 
+
+const int intervall = 10000;
+int pin_mq = 4;
+
+WiFiClient client;
+Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
+
+
+Adafruit_MQTT_Publish feedsh = Adafruit_MQTT_Publish(&mqtt, "feedsh");//LLamado de la Función para conectarse al core como publicador
+
+void MQTT_connect();
+
+
+
+void setup(){
+  pinMode(buzzer, OUTPUT); // Configuro el Buzzer - pin 14 Como Output
+    tone(buzzer, 1000); //Envia Un Sonido a 1KHz
+    ser1.attach(13,650,2400);//Configuro mi Servo en el Pin 13, a un minimo de 650 microsegundos y maximo de 2400 microsegundos
+    
+    ser1.write(0);//Giro El Servo Al Angulo 0
+  delay(1000);//Delay de 1 Segundo
+  ser1.write(90);//Giro El Servo Al Angulo 90
+  delay(1000);//Delay de 1 Segundo
+  ser1.write(0);//Giro El Servo Al Angulo 0
+  delay(1000);//Delay de 1 Segundo
+  ser1.write(90);//Giro El Servo Al Angulo 90
+
+//Conexion Al Wifi
+  WiFi.forceSleepWake();
+  WiFi.mode(WIFI_STA);
+  Serial.begin(115200); //Puerto Del Monitor Serial
+  Serial.print("Connecting to ");
+  Serial.println(WLAN_SSID);
+
+  WiFi.begin(WLAN_SSID, WLAN_PASS);
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+    //Mientras no haya conexión al core, imprimira puntos (.) cada medio segundo
+    delay(500);
+    Serial.print("."); 
+  }
+  
+  Serial.println();
+  Serial.println("WiFi connected");//Conexion Wifi Lograda
+  Serial.println("IP address: "); Serial.println(WiFi.localIP());
+  MQTT_connect();             //Conexión del publicador lograda
+}
+
+void loop(){
+ 
+   
+  delay(5000);        //Delay de 5 Segundos
+  noTone(buzzer);     //Detiene El Sonido de Buzzer
+    feedsh.publish("Activo");//Envia El Dato Activo Al Core 
+  
+}
+
+
+
+void MQTT_connect() {
+  int8_t ret;
+  if (mqtt.connected()) {
+    return;
+  }
+
+  Serial.print("Connecting to MQTT... ");
+  uint8_t retries = 3;
+  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+       Serial.println(mqtt.connectErrorString(ret));
+       Serial.println("Retrying MQTT connection in 5 seconds...");
+       mqtt.disconnect();
+       delay(5000);  // wait 5 seconds
+       retries--;
+       if (retries == 0) {
+         while (1);
+       }
+  }
+  Serial.println("MQTT Connected!");
+}

@@ -1,14 +1,12 @@
-#include <Wire.h>
 //Libreria De ingeniería en Software
 #include <ESP8266WiFi.h>
-#include "Adafruit_MQTT.h"
-#include "Adafruit_MQTT_Client.h"
+#include "Adafruit_MQTT.h"  //Librería para conexion del protopoco MQTT
+#include "Adafruit_MQTT_Client.h" 
  
 ADC_MODE(ADC_VCC);
  //Valores prestablecidos del Core
 #define WLAN_SSID       "CWC-9307524"
 #define WLAN_PASS       "mffksgMG57rw"
- 
 #define HOST        "192.168.0.32"
 #define PORT        1883
 #define USERNAME    "username"
@@ -26,12 +24,12 @@ WiFiClient client;
 Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
 //Datos del susbriptor (MQ135)
 Adafruit_MQTT_Publish gas = Adafruit_MQTT_Publish(&mqtt, "gas");
-//LLamado de la Función para conectarse al core como suscriptor
+//LLamado de la Función para conectarse al core como publicador
 void MQTT_connect();
  
  
 void setup() {
-  //Conexion al Core
+  //Conexion al WiFi
  WiFi.forceSleepWake();
   WiFi.mode(WIFI_STA);
   Serial.begin(115200);        // Puerto del monitor serial
@@ -49,7 +47,7 @@ void setup() {
   Serial.println();
   Serial.println("WiFi connected");      //Conexion wifi lograda
   Serial.println("IP address: "); Serial.println(WiFi.localIP());
-  MQTT_connect();                 //Conexión del susbriptor lograda
+  MQTT_connect();                 //Conexión del publicador lograda
   
   //Programacion de los pines digitales 
   pinMode(pin_mq, INPUT);    //MQ135, Detector de gas
@@ -90,7 +88,7 @@ void loop()
      delay(500); //espera medio segundo
  }
 }
- //Funcion para conexión al core como suscriptor 
+ //Funcion para conexión al core como publicador 
   void MQTT_connect() {
   int8_t ret;
   if (mqtt.connected()) {

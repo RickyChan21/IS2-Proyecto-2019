@@ -18,7 +18,7 @@ const int intervall = 10000;
 //Variables para declarar sensores de arduino
 int pin_mq = 5;  //D1, número pin del NodeMCU
 int buzzer = 0; //D3, número pin del NodeMCU
-int x =3;
+int x =3;       //Variable que servirá de control
 int fan = 4; //D2, número pin del NodeMCU
 
 WiFiClient client;
@@ -59,8 +59,8 @@ void setup() {
  
 void loop()
 {
- boolean mq_estado = digitalRead(pin_mq); //Se define una variable de tipo booleano y leemos el sensor digitalmente
- if(mq_estado) //si la salida del sensor es 1
+ boolean mq_estado = digitalRead(pin_mq); //Se define una variable de tipo booleano y leemos el sensor digitalmente (0 o 1)
+ if(mq_estado) //si la salida del sensor MQ135 es 1
   {
     while(x!=0) //Ciclo de control para no imprimir demasiado, si x=0 no seguira con la siguiente acción
     {
@@ -68,11 +68,11 @@ void loop()
      x=0;   //Se iguala a 0 la variable de control
     }
   }
-  else //si la salida del sensor es 0
+  else //si la salida del sensor MQ135 es 0
   {
     while(x!=1) //Ciclo de control, si x=1 no seguira con la siguiente acción
     {
-       gas.publish("Gas Detectado"); //Publicación al Core
+       gas.publish("Gas Detectado");             //Publicación al Core
        x=1;  //Se iguala a 1 la variable de control
     }
   } 

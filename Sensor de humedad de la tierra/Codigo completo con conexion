@@ -1,4 +1,4 @@
-#include <BearSSLHelpers.h>
+#include <BearSSLHelpers.h> // libreria para conectar el modulo ESP8266
 #include <CertStoreBearSSL.h>
 #include <ESP8266WiFi.h> // Libreria para utilizar el Modulo ESP8266
 #include <Wire.h> // Libreria para SDA(Enviar dato) y SCL 
@@ -6,31 +6,30 @@
 #include "Adafruit_MQTT_Client.h" //protocolo para ser cliente del CORE
 #define bomba 14 //definir la variable para usar el relay
 
+//Valores prestablecidos del Core
 #define WLAN_SSID       "Skynet"
 #define WLAN_PASS       "2!,y^5#t5<;T$eC*zBUb4BM)'[N9Em>G"
-
 #define HOST        "172.20.160.108"
 #define PORT        1883
 #define USERNAME    "username"
 #define PASSWORD    "12345678" 
 
-int rainPin = A0;
+int rainPin = A0; // definir variable para el pin analogo
 // you can adjust the threshold value
 int thresholdValue = 800;
-WiFiClient client;
-Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
 
+WiFiClient client; //Nombre del cliente para conectar al core
+Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD); // funcion que toma los datos de los valores preestablecidos del core
+Adafruit_MQTT_Publish humedad = Adafruit_MQTT_Publish(&mqtt, "humedad"); //definicion del topic humedad para mandar la informacion al core
+Adafruit_MQTT_Publish nivelh = Adafruit_MQTT_Publish(&mqtt, "nivelh"); //definicion del topic nivelh para mandar la informacion al core
 
-Adafruit_MQTT_Publish humedad = Adafruit_MQTT_Publish(&mqtt, "humedad");
-Adafruit_MQTT_Publish nivelh = Adafruit_MQTT_Publish(&mqtt, "nivelh");
-
-void MQTT_connect();
-
+void MQTT_connect(); // Inicia la conexion al core
+// el setup para verificar la conexion al core verificando los diferentes certificados 
 void setup(){
-  pinMode (bomba, OUTPUT);
-  pinMode(rainPin, INPUT);
-  Serial.begin(115200);
-    WiFi.forceSleepWake();
+  pinMode (bomba, OUTPUT); //define que pin sera salida
+  pinMode(rainPin, INPUT); //define que pin tendra entrada
+  Serial.begin(115200); //cantidad de baudios con los que se maneja el archivo
+  WiFi.forceSleepWake(); // CONECTA SÓLO DESPUÉS DE PRIMEROS PUNTOS RESTARTS O NO SE CONECTA EN TODO
   WiFi.mode(WIFI_STA);
   Serial.print("Connecting to ");
   Serial.println(WLAN_SSID);
@@ -38,35 +37,37 @@ void setup(){
   WiFi.begin(WLAN_SSID, WLAN_PASS);
   while (WiFi.status() != WL_CONNECTED) 
   {
+     //Mientras no haya conexión al core, imprimira puntos (.) cada medio segundo
     delay(500);
     Serial.print(".");
   }
   
   Serial.println();
-  Serial.println("WiFi connected");
+  Serial.println("WiFi connected"); //Conexion wifi lograda
   Serial.println("IP address: "); Serial.println(WiFi.localIP());
-  MQTT_connect();
+  MQTT_connect(); //Conexión del publicador lograda
 }
 
 
 
 void loop() {
   // read the input on analog pin 0:
-  int sensorValue = analogRead(rainPin);
-  Serial.print(sensorValue);
+  int sensorValue = analogRead(rainPin); // la variable sensorValue sera igual al pin analogo
+  Serial.print(sensorValue); // se imprime el primer valor del sensor
   if(sensorValue < thresholdValue){
-    Serial.println(" - Doesn't need watering");
-  humedad.publish(" - Doesn't need watering");
-  nivelh.publish(sensorValue);
+    Serial.println(" - Doesn't need watering");  // imprime informacion para enviar al core
+  humedad.publish(" - Doesn't need watering"); // informacion para enviar al core (No necesita agua)
+  nivelh.publish(sensorValue);  // informacion para enviar al core
   
   }
   else {
-    Serial.println(" - Time to water your plant");
-     humedad.publish(" -Time to water your plant");
-  nivelh.publish(sensorValue);
+    Serial.println(" - Time to water your plant");  // informacion para enviar al core(Tiempo de ponerle agua a la planta)
+     humedad.publish(" -Time to water your plant"); // informacion para enviar al core (Tiempo de ponerle agua a la planta)
+  nivelh.publish(sensorValue);// envia
   }
   delay(10000);
 }
+ // Funcion para conexión al core como publicador, Verifica si la conexion con el core es satisfactoria 
   void MQTT_connect() {
   int8_t ret;
   if (mqtt.connected()) {
@@ -75,7 +76,7 @@ void loop() {
  
   Serial.print("Connecting to MQTT... ");
   uint8_t retries = 3;
-  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+  while ((ret = mqtt.connect()) != 0) { // connect devolverá 0 para conectado
        Serial.println(mqtt.connectErrorString(ret));
        Serial.println("Retrying MQTT connection in 5 seconds...");
        mqtt.disconnect();

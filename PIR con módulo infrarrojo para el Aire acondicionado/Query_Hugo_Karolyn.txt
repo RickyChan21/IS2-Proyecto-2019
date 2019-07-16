@@ -1,0 +1,6 @@
+CREATE TABLE aireAcondicionado(
+estado1 CHAR(10),
+PRIMARY KEY (numero_medicion)
+);
+
+SELECT * FROM aireAcondicionado

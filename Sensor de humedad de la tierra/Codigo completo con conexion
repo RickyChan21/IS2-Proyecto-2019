@@ -1,0 +1,90 @@
+#include <BearSSLHelpers.h>
+#include <CertStoreBearSSL.h>
+#include <ESP8266WiFi.h> // Libreria para utilizar el Modulo ESP8266
+#include <Wire.h> // Libreria para SDA(Enviar dato) y SCL 
+#include "Adafruit_MQTT.h" //protocolo para la conexion del Core
+#include "Adafruit_MQTT_Client.h" //protocolo para ser cliente del CORE
+#define bomba 14 //definir la variable para usar el relay
+
+#define WLAN_SSID       "Skynet"
+#define WLAN_PASS       "2!,y^5#t5<;T$eC*zBUb4BM)'[N9Em>G"
+
+#define HOST        "172.20.160.108"
+#define PORT        1883
+#define USERNAME    "username"
+#define PASSWORD    "12345678" 
+
+int rainPin = A0;
+// you can adjust the threshold value
+int thresholdValue = 800;
+WiFiClient client;
+Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
+
+
+Adafruit_MQTT_Publish humedad = Adafruit_MQTT_Publish(&mqtt, "humedad");
+Adafruit_MQTT_Publish nivelh = Adafruit_MQTT_Publish(&mqtt, "nivelh");
+
+void MQTT_connect();
+
+void setup(){
+  pinMode (bomba, OUTPUT);
+  pinMode(rainPin, INPUT);
+  Serial.begin(115200);
+    WiFi.forceSleepWake();
+  WiFi.mode(WIFI_STA);
+  Serial.print("Connecting to ");
+  Serial.println(WLAN_SSID);
+
+  WiFi.begin(WLAN_SSID, WLAN_PASS);
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  Serial.println();
+  Serial.println("WiFi connected");
+  Serial.println("IP address: "); Serial.println(WiFi.localIP());
+  MQTT_connect();
+}
+
+
+
+void loop() {
+  // read the input on analog pin 0:
+  int sensorValue = analogRead(rainPin);
+  Serial.print(sensorValue);
+  if(sensorValue < thresholdValue){
+    Serial.println(" - Doesn't need watering");
+  humedad.publish(" - Doesn't need watering");
+  nivelh.publish(sensorValue);
+  
+  }
+  else {
+    Serial.println(" - Time to water your plant");
+     humedad.publish(" -Time to water your plant");
+  nivelh.publish(sensorValue);
+  }
+  delay(10000);
+}
+  void MQTT_connect() {
+  int8_t ret;
+  if (mqtt.connected()) {
+    return;
+  }
+ 
+  Serial.print("Connecting to MQTT... ");
+  uint8_t retries = 3;
+  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+       Serial.println(mqtt.connectErrorString(ret));
+       Serial.println("Retrying MQTT connection in 5 seconds...");
+       mqtt.disconnect();
+       delay(5000);  // wait 5 seconds
+       retries--;
+       if (retries == 0) {
+         // basically die and wait for WDT to reset me
+         while (1);
+       }
+  }
+  Serial.println("MQTT Connected!");
+}

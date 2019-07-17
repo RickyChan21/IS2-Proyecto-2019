@@ -1,10 +1,10 @@
-#include <Wire.h>
-#include <ESP8266WiFi.h>
+#include <Wire.h>// Libreria Para usar puertos CDA SSL
+#include <ESP8266WiFi.h>//Libreria Para utilizar El wifi en Node MCU
 #include <Adafruit_MQTT.h>//Librería para conexion del protocolo MQTT
-#include <Adafruit_MQTT_Client.h>
+#include <Adafruit_MQTT_Client.h>//Librería para conexion del protocolo MQTT Cliente
 #include <Servo.h> //Incluimos la Libreria de Servo Para porder Utilizar Servos
 const int buzzer = 14; //buzzer to arduino pin 14
-Servo ser1;
+Servo ser1;//Defino Servo Como (ser1)
 
 ADC_MODE(ADC_VCC);
 //Valores Predeterminados Para la Conexion al Core
@@ -68,12 +68,12 @@ void loop(){
    
   delay(5000);        //Delay de 5 Segundos
   noTone(buzzer);     //Detiene El Sonido de Buzzer
-    feedsh.publish("Activo");//Envia El Dato Activo Al Core 
+    feedsh.publish("Activo");//Envia El Dato (Activo) Al Core 
   
 }
 
 
-
+ //Funcion para conexión al core como publicador
 void MQTT_connect() {
   int8_t ret;
   if (mqtt.connected()) {

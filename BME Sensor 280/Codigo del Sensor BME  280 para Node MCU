@@ -35,7 +35,7 @@ void MQTT_connect();//Inicia la coneccion con el core
 void setup() {
   WiFi.forceSleepWake();
   WiFi.mode(WIFI_STA);
-  Serial.begin(115200);
+  Serial.begin(115200);               //Monitor Serial
   Serial.print("Connecting to ");
   Serial.println(WLAN_SSID);
 

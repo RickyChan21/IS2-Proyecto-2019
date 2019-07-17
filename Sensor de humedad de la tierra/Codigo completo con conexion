@@ -21,7 +21,7 @@ int thresholdValue = 800;
 WiFiClient client; //Nombre del cliente para conectar al core
 Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD); // funcion que toma los datos de los valores preestablecidos del core
 Adafruit_MQTT_Publish humedad = Adafruit_MQTT_Publish(&mqtt, "humedad"); //definicion del topic humedad para mandar la informacion al core
-Adafruit_MQTT_Publish nivelh = Adafruit_MQTT_Publish(&mqtt, "nivelh"); //definicion del topic nivelh para mandar la informacion al core
+Adafruit_MQTT_Publish nivelh = Adafruit_MQTT_Publish(&mqtt, "nivelh"); //definicion del topic nivelh para publicar la informacion al core
 
 void MQTT_connect(); // Inicia la conexion al core
 // el setup para verificar la conexion al core verificando los diferentes certificados 
@@ -57,13 +57,13 @@ void loop() {
   if(sensorValue < thresholdValue){
     Serial.println(" - Doesn't need watering");  // imprime informacion para enviar al core
   humedad.publish(" - Doesn't need watering"); // informacion para enviar al core (No necesita agua)
-  nivelh.publish(sensorValue);  // informacion para enviar al core
+  nivelh.publish(sensorValue);  // publica información al core
   
   }
   else {
     Serial.println(" - Time to water your plant");  // informacion para enviar al core(Tiempo de ponerle agua a la planta)
      humedad.publish(" -Time to water your plant"); // informacion para enviar al core (Tiempo de ponerle agua a la planta)
-  nivelh.publish(sensorValue);// envia
+  nivelh.publish(sensorValue);// publica infomación al core
   }
   delay(10000);
 }

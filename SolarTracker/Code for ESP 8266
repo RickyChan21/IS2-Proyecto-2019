@@ -37,7 +37,7 @@ void setup() {
   Serial.println();
   Serial.println("WiFi connected");
   Serial.println("IP address: "); Serial.println(WiFi.localIP());
-  MQTT_connect();
+  MQTT_connect(); 
   pinMode(pinSonda, INPUT);
 }
  void loop() {

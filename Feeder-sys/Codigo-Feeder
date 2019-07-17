@@ -1,4 +1,4 @@
-#include <Wire.h>// Libreria Para usar puertos CDA SSL
+#include <Wire.h>// Libreria Para usar puertos SDA SSL
 #include <ESP8266WiFi.h>//Libreria Para utilizar El wifi en Node MCU
 #include <Adafruit_MQTT.h>//Librería para conexion del protocolo MQTT
 #include <Adafruit_MQTT_Client.h>//Librería para conexion del protocolo MQTT Cliente

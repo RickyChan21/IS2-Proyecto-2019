@@ -1,0 +1,132 @@
+#include <Wire.h>//Libreria para SDA y SCL 
+#include <Adafruit_Sensor.h>//Libreria necesaria para el tipo de sensor de adafruit
+#include <Adafruit_BME280.h>//Libreria nesearia para el sensor especifico del BME 280
+#include <ESP8266WiFi.h>//Libreria para usar el modulo ESP
+#include "Adafruit_MQTT.h"//Protocolo para la conexcion con el core
+#include "Adafruit_MQTT_Client.h"//Protocolo para poder ser cliente del core
+
+Adafruit_BME280 bme; //Defino el sensor de forma de una variable para mas facil manejo
+
+#define Frio 02 //Variable para del relay que controla el enfriamiento
+#define Calor 14 //Varibale para del relay que controla la calefacción
+//Valores de para conectar al red del core
+#define WLAN_SSID       "Skynet"
+#define WLAN_PASS       "2!,y^5#t5<;T$eC*zBUb4BM)'[N9Em>G"
+
+#define HOST        "172.20.160.108"
+#define PORT        1883
+#define USERNAME    "username"
+#define PASSWORD    "12345678" 
+
+int x;//variable que captura el valor inicial de la primera lectura del sensor
+int y;// varible que captura el segundo valor capturado del sensor 
+unsigned long delayTime;// delay para la pruba de buena conexcion con el sensor bme 280
+
+WiFiClient client;// Nombre del cliente para conectar al core
+Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);//Verificar las credenciales para conexion con el core
+
+
+Adafruit_MQTT_Publish Temperatura = Adafruit_MQTT_Publish(&mqtt, "Temperatura");//Topic enviado sobre la termperatura leida
+Adafruit_MQTT_Publish Cold = Adafruit_MQTT_Publish(&mqtt, "Cold");//Topic enviado si el relay esta activo o no
+Adafruit_MQTT_Publish Hot= Adafruit_MQTT_Publish(&mqtt, "Hot");//Topic enviado si el relay es activo o no 
+
+void MQTT_connect();//Inicia la coneccion con el core
+// Este Setup es para verificar la buena conneccion con el core verificancdo todos los cerfiticados
+void setup() {
+  WiFi.forceSleepWake();
+  WiFi.mode(WIFI_STA);
+  Serial.begin(115200);
+  Serial.print("Connecting to ");
+  Serial.println(WLAN_SSID);
+
+  WiFi.begin(WLAN_SSID, WLAN_PASS);
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  Serial.println();
+  Serial.println("WiFi connected");
+  Serial.println("IP address: "); Serial.println(WiFi.localIP());
+  MQTT_connect();
+
+  
+  pinMode(Frio, OUTPUT);//se define que el pin sera de salida
+  pinMode(Calor, OUTPUT);//se define que el pin sera de salida
+  Serial.begin(115200);//baudios los cuales se va a maneja el archivo
+  Serial.println(F("BME280 test"));//Se prueba la buena conexcion con el el sensor bme2
+  bool status;
+
+    status = bme.begin(0x76); 
+    if (!status) {//Crea un test para verificar dicha conexcion
+        Serial.println("Could not find a valid BME280 sensor, check wiring!");
+        while (1);
+    }
+      
+    Serial.println("-- Default Test --");
+    delayTime = 1000;
+
+    Serial.println();
+    
+    delay(1000);
+   x=bme.readTemperature();//captura del la primera lectura por parte del sensor
+    delay(1000);
+}
+
+void loop() {
+ 
+ y=bme.readTemperature();//segunda captura de la lectura por parte del sensor
+
+ if (x<y || x>y){ //Segmento donde hago el control de imprimir el valor , solo se envia el valor al core si y solo si el segundo valor leido es diferente al primer valor leido de forma entera 
+  
+  if (x > 29){//Enciende el relay sin la temperatura es mayor a 29 grados C
+  digitalWrite(Frio,HIGH);
+  Cold.publish("Encendido");//Envio el string Enciendido si el relay enciende dada la condicion
+  }
+  else if (x<=26){//Apaga el relay sin la temperatura es menor o igual a 26 grados C
+  digitalWrite(Frio,LOW);
+  Cold.publish("Apagado");//Envio el string Apagado si el relay se apaga dada la condicion
+  }
+  if (x <24) {//Enciende el relay sin la temperatura es mayor a 24 grados C
+    digitalWrite(Calor,HIGH);
+    Hot.publish("Encendido");//Envio el string Enciendido si el relay enciende dada la condicion
+  }
+  }
+   else if (x >=16) {//Apaga el relay sin la temperatura es menor o igual a 16 grados C
+   digitalWrite(Calor,LOW);
+   Hot.publish("Apagado");//Envio el string Apagado si el relay se apaga dada la condicion
+  }
+
+  x=y;//Igualo las temperaturas para poder seguir leyendo datos hasta que uno sea diferente al priemero leido y luego se imprima 
+  Temperatura.publish(x);//Envio la temperatura medida 
+  Serial.print("Temperature = ");
+  Serial.print(x);
+  Serial.println("*C");
+  Serial.println();
+  delay(5000);
+ }
+ 
+}
+//Prueba de conexcion con el core
+void MQTT_connect() {
+  int8_t ret;
+  if (mqtt.connected()) {
+    return;
+  }
+ 
+  Serial.print("Connecting to MQTT... ");
+  uint8_t retries = 3;
+  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+       Serial.println(mqtt.connectErrorString(ret));
+       Serial.println("Retrying MQTT connection in 5 seconds...");
+       mqtt.disconnect();
+       delay(5000);  // wait 5 seconds
+       retries--;
+       if (retries == 0) {
+         // basically die and wait for WDT to reset me
+         while (1);
+       }
+  }
+  Serial.println("MQTT Connected!");
+}

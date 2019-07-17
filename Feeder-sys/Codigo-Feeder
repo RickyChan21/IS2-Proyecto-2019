@@ -11,8 +11,11 @@ ADC_MODE(ADC_VCC);
 #define WLAN_SSID       "Skynet"
 #define WLAN_PASS       "2!,y^5#t5<;T$eC*zBUb4BM)'[N9Em>G"
 
+//Este es el IP y el puerto del Broker (Raspberry Pi) al cuál el NodeMCU debe suscribirse
 #define HOST        "172.20.160.108"
 #define PORT        1883
+
+//Este es el usuario y contraseña que tiene el NodeMCU como cliente
 #define USERNAME    "username"
 #define PASSWORD    "12345678" 
 

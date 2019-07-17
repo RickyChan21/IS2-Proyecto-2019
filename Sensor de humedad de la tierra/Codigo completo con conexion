@@ -15,7 +15,7 @@
 #define PASSWORD    "12345678" 
 
 int rainPin = A0; // definir variable para el pin analogo
-// you can adjust the threshold value
+// se ajusta el valor limite
 int thresholdValue = 800;
 
 WiFiClient client; //Nombre del cliente para conectar al core
@@ -51,11 +51,11 @@ void setup(){
 
 
 void loop() {
-  // read the input on analog pin 0:
+  // leer la entrada en el pin analógico 0:
   int sensorValue = analogRead(rainPin); // la variable sensorValue sera igual al pin analogo
   Serial.print(sensorValue); // se imprime el primer valor del sensor
   if(sensorValue < thresholdValue){
-    Serial.println(" - Doesn't need watering");  // imprime informacion para enviar al core
+    Serial.println(" - Doesn't need watering");  // imprime informacion (No necesita agua)
   humedad.publish(" - Doesn't need watering"); // informacion para enviar al core (No necesita agua)
   nivelh.publish(sensorValue);  // publica información al core
   
@@ -63,7 +63,7 @@ void loop() {
   else {
     Serial.println(" - Time to water your plant");  // informacion para enviar al core(Tiempo de ponerle agua a la planta)
      humedad.publish(" -Time to water your plant"); // informacion para enviar al core (Tiempo de ponerle agua a la planta)
-  nivelh.publish(sensorValue);// publica infomación al core
+  nivelh.publish(sensorValue);// publica infomación de la variable nivel.h al core
   }
   delay(10000);
 }

@@ -30,7 +30,7 @@ void setup() {
   WiFi.forceSleepWake();
   WiFi.mode(WIFI_STA);
   
-  Serial.print("Connecting to "); //impresión indicando a que red se esta conectando
+  Serial.print("Connecting to "); //impresión indicando a que red se esta conectando 
   Serial.println(WLAN_SSID);      //se imprime el nombre de la red
  
   WiFi.begin(WLAN_SSID, WLAN_PASS); //se inicializa la conexión con el SSID y la Contraseña puesta

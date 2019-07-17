@@ -29,7 +29,7 @@ Adafruit_MQTT_Publish estado1 = Adafruit_MQTT_Publish(&mqtt, "estado1");
 
 void MQTT_connect();
 
-
+//Definición de Variables
 const uint16_t kIrLed = 4;  
 const int PIR = 14;
 const int LED = 16;
@@ -39,6 +39,7 @@ IRsend irsend(kIrLed);
 
 void setup() {
   irsend.begin();
+  //Definicion de las variables de salida y entrada
   pinMode(PIR, INPUT);
   pinMode(LED, OUTPUT);
 

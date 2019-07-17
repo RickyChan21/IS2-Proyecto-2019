@@ -1,14 +1,14 @@
 #include <Wire.h>//Libreria para SDA y SCL 
 #include <Adafruit_Sensor.h>//Libreria necesaria para el tipo de sensor de adafruit
-#include <Adafruit_BME280.h>//Libreria nesearia para el sensor especifico del BME 280
+#include <Adafruit_BME280.h>//Libreria nesesaria para el sensor especifico del BME 280
 #include <ESP8266WiFi.h>//Libreria para usar el modulo ESP
-#include "Adafruit_MQTT.h"//Protocolo para la conexcion con el core
+#include "Adafruit_MQTT.h"//Protocolo para la conexion con el core
 #include "Adafruit_MQTT_Client.h"//Protocolo para poder ser cliente del core
 
 Adafruit_BME280 bme; //Defino el sensor de forma de una variable para mas facil manejo
 
 #define Frio 02 //Variable para del relay que controla el enfriamiento
-#define Calor 14 //Varibale para del relay que controla la calefacción
+#define Calor 14 //Variable para del relay que controla la calefacción
 //Valores de para conectar al red del core
 #define WLAN_SSID       "Skynet"
 #define WLAN_PASS       "2!,y^5#t5<;T$eC*zBUb4BM)'[N9Em>G"

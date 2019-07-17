@@ -1,5 +1,5 @@
 #include <BearSSLHelpers.h> // libreria para conectar el modulo ESP8266
-#include <CertStoreBearSSL.h>
+#include <CertStoreBearSSL.h> // libreria para conectar el servidor con sus propios certificados autofirmados y no lo son permitiendo conexiones a servidores HTTPS / TLS
 #include <ESP8266WiFi.h> // Libreria para utilizar el Modulo ESP8266
 #include <Wire.h> // Libreria para SDA(Enviar dato) y SCL 
 #include "Adafruit_MQTT.h" //protocolo para la conexion del Core

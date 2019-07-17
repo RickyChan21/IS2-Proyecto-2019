@@ -1,9 +1,9 @@
-#include <Wire.h> "Librerias para las conecciones del BME 280";
-#include <ESP8266WiFi.h>
-#include "Adafruit_MQTT.h"
-#include "Adafruit_MQTT_Client.h"
+#include <Wire.h>;                           //Libreria para SDA(Enviar dato) y SCL
+#include <ESP8266WiFi.h>                     //Libreria para utilizar el Modulo ESP8266
+#include "Adafruit_MQTT.h"                   //Protocolo para la conexion del Core
+#include "Adafruit_MQTT_Client.h"            //Protocolo para ser cliente del CORE 
 
-
+//Valores prestablecidos del Core
 #define WLAN_SSID       "Skynet"
 #define WLAN_PASS       "2!,y^5#t5<;T$eC*zBUb4BM)'[N9Em>G"
 
@@ -12,21 +12,22 @@
 #define USERNAME    "username"
 #define PASSWORD    "12345678" 
 
-WiFiClient client;
-Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
-
-
-Adafruit_MQTT_Publish Volta = Adafruit_MQTT_Publish(&mqtt, "Volta");
-int pinSonda = A0;
+WiFiClient client;                                                   //Nombre del cliente para conectar al core
+Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);  //Funcion que toma los datos de los valores preestablecidos del core
+Adafruit_MQTT_Publish Volta = Adafruit_MQTT_Publish(&mqtt, "Volta"); //Definicion del topic Volta para mandar la informacion al core
+int pinSonda = A0;  //Define al pin A0 como entrada del panel solar
 float escala = 100; //100 para voltios, 0.1 par
-void MQTT_connect();
+
+void MQTT_connect(); //Inicia la conexion al core
 void setup() {
-  WiFi.forceSleepWake();
-  WiFi.mode(WIFI_STA);
+  WiFi.forceSleepWake(); //CONECTA SÓLO DESPUÉS DE PRIMEROS PUNTOS RESTARTS O NO SE CONECTA EN TODO
+  WiFi.mode(WIFI_STA);   //Inicializa el modulo WiFi
   Serial.begin(115200);
   Serial.print("Connecting to ");
-  Serial.println(WLAN_SSID);
-
+  Serial.println(WLAN_SSID); //Imprime el Wlan SSID en este caso Skynet
+   
+   
+   //Mientras no haya conexión al core, imprimira puntos (.) cada medio segundo
   WiFi.begin(WLAN_SSID, WLAN_PASS);
   while (WiFi.status() != WL_CONNECTED) 
   {
@@ -35,22 +36,25 @@ void setup() {
   }
   
   Serial.println();
-  Serial.println("WiFi connected");
+  Serial.println("WiFi connected"); //Conexion wifi lograda
   Serial.println("IP address: "); Serial.println(WiFi.localIP());
-  MQTT_connect(); 
-  pinMode(pinSonda, INPUT);
+  MQTT_connect(); //Conexión del publicador lograda 
+  
+  pinMode(pinSonda, INPUT); //Se define al pin Sonda como entrada
 }
  void loop() {
-//Voltimetro LOOP
-  float lectura = analogRead(pinSonda); 
-  lectura = map(lectura, 0, 1023, 0, 500); 
-  float voltaje = lectura/escala; 
-  Volta.publish(voltaje);
-  Serial.print(voltaje);
-  Serial.println(" V");
-  delay(60000);
+ 
+//Voltimetro 
+  float lectura = analogRead(pinSonda); //Se leen los datos provenientes del pin A0
+  lectura = map(lectura, 0, 1023, 0, 500); // Se ingresan los datos leidos al arreglo 
+  float voltaje = lectura/escala; //Se almacena en la variable voltaje el calculo con la escala
+  Volta.publish(voltaje);  //Envia voltaje al core
+  Serial.print(voltaje);   //Imprime informacion Voltaje 
+  Serial.println(" V");    //Imprime la letra V a un lado de los datos
+  delay(60000);            // delay de un minuto 
 
 
+// Funcion para conexión al core como publicador, Verifica si la conexion con el core es satisfactoria
  }
   void MQTT_connect() {
   int8_t ret;
@@ -60,7 +64,7 @@ void setup() {
  
   Serial.print("Connecting to MQTT... ");
   uint8_t retries = 3;
-  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+  while ((ret = mqtt.connect()) != 0) { // connect devolverá 0 para conectado
        Serial.println(mqtt.connectErrorString(ret));
        Serial.println("Retrying MQTT connection in 5 seconds...");
        mqtt.disconnect();

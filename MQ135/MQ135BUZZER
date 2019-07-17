@@ -1,16 +1,16 @@
 //Libreria De ingeniería en Software
 #include <ESP8266WiFi.h>  //Libreria para el uso del ESP8266
 #include "Adafruit_MQTT.h"  //Librería para conexion del protopoco MQTT
-#include "Adafruit_MQTT_Client.h" 
+#include "Adafruit_MQTT_Client.h" //librería para conexion como publicador
  
 ADC_MODE(ADC_VCC);
  //Valores prestablecidos del Core
-#define WLAN_SSID       "CWC-9307524"
-#define WLAN_PASS       "mffksgMG57rw"
-#define HOST        "192.168.0.32"
-#define PORT        1883
-#define USERNAME    "username"
-#define PASSWORD    "12345678"*/
+#define WLAN_SSID       "CWC-9307524" //Nombre del wifi conectado al core
+#define WLAN_PASS       "mffksgMG57rw" //Contraseña del wifi
+#define HOST        "192.168.0.32"  //ip del core
+#define PORT        1883            //Puerta del enlace del core
+#define USERNAME    "username"      //Nombre del core
+#define PASSWORD    "12345678"*/    // contraseña del core
  
 const int intervall = 10000;
 //Variables para declarar sensores de arduino
@@ -22,7 +22,7 @@ int fan = 4; //D2, número pin del NodeMCU
 WiFiClient client;
 //Nombre del cliente a conectar (Core)
 Adafruit_MQTT_Client mqtt(&client, HOST, PORT, USERNAME, PASSWORD);
-//Datos del susbriptor (MQ135)
+//Datos del cliente (sensor MQ135)
 Adafruit_MQTT_Publish gas = Adafruit_MQTT_Publish(&mqtt, "gas");
 //LLamado de la Función para conectarse al core como publicador
 void MQTT_connect();
@@ -34,8 +34,9 @@ void setup() {
   WiFi.mode(WIFI_STA);
   Serial.begin(115200);        // Puerto del monitor serial
   Serial.print("Connecting to ");
-  Serial.println(WLAN_SSID);
+  Serial.println(WLAN_SSID);    //Escrituras en el monitor serial
  
+ //Estatus de la conexion al wifi del ESP
   WiFi.begin(WLAN_SSID, WLAN_PASS);
   while (WiFi.status() != WL_CONNECTED)
   {

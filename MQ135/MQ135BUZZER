@@ -1,5 +1,5 @@
 //Libreria De ingeniería en Software
-#include <ESP8266WiFi.h>
+#include <ESP8266WiFi.h>  //Libreria para el uso del ESP8266
 #include "Adafruit_MQTT.h"  //Librería para conexion del protopoco MQTT
 #include "Adafruit_MQTT_Client.h" 
  

@@ -27,7 +27,7 @@ void setup() {
   WiFi.forceSleepWake();
   WiFi.mode(WIFI_STA);
   Serial.begin(115200); //se inicia la comunicación serial en 115200 baudios
-  Serial.print("Connecting to "); //se inicia la comunicación serial en 115200 baudios
+  Serial.print("Connecting to "); 
   Serial.println(WLAN_SSID); //se imprime el nombre de la red
 
   WiFi.begin(WLAN_SSID, WLAN_PASS); //se inicializa la conexión con el SSID y la Contraseña puesta
@@ -47,7 +47,7 @@ void setup() {
 }
 
 void loop() {
-  int L =digitalRead(LIGHT);// lee el sensor 
+  int L =digitalRead(LIGHT);// lee el sensor, los digitalRead() solo leen 0 y 1
       if(L == 1){
     Serial.println(" light is OFF");
     digitalWrite(RELAY,HIGH);// enciende el relay

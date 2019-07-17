@@ -30,9 +30,9 @@ void setup(){
   pinMode(rainPin, INPUT); //define que pin tendra entrada
   Serial.begin(115200); //cantidad de baudios con los que se maneja el archivo
   WiFi.forceSleepWake(); // CONECTA SÓLO DESPUÉS DE PRIMEROS PUNTOS RESTARTS O NO SE CONECTA EN TODO
-  WiFi.mode(WIFI_STA);
+  WiFi.mode(WIFI_STA); // inicializa el modulo WiFi
   Serial.print("Connecting to ");
-  Serial.println(WLAN_SSID);
+  Serial.println(WLAN_SSID); // imprime el Wlan SSID en este caso Skynet
 
   WiFi.begin(WLAN_SSID, WLAN_PASS);
   while (WiFi.status() != WL_CONNECTED) 

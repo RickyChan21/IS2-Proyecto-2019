@@ -1,0 +1,56 @@
+NodeMCU
+ 
+•	Voltaje de entrada (USB): 5V
+•	Voltaje de salida en los pines: 3.3V
+•	Voltaje de referencia en el ADC: 3.3V
+•	Corriente nominal por pin: 12mA
+•	Frecuencia de procesador: 80MHz (160MHz max.)
+•	4MB Flash
+•	Consumo de corriente en stand-by @80MHz: 80mA
+•	Consumo de corriente al recibir una peticion (librería WebServer en modo de punto de acceso) @ 80MHz: 90mA
+•	Consumo de corriente al utilizar HTTPClient.get() @ 80 MHz: 100-110mA
+•	Consumo de corriente en stand-by @160MHz: 90mA
+•	Consumo de corriente al recibir una peticion (librería WebServer en modo de punto de acceso) @ 160MHz: 90-100mA
+•	Consumo de corriente al utilizar HTTPClient.get() @ 160 MHz: 100-110Ma
+
+
+
+Características de Servo SG90 Tower Pro
+ 
+•	Dimensiones (L x W xH) = 22.0 x 11.5 x 27 mm (0.86 x 0.45 x 1.0 pulgadas)
+•	Peso: 9 gramos
+•	Peso con cable y conector: 10.6 gramos
+•	Torque a 4.8 volts: 16.7 oz/in o 1.2 kg/cm
+•	Voltaje de operación: 4.0 a 7.2 volts
+•	Velocidad de giro a 4.8 volts: 0.12 seg / 60 º
+•	Conector universal para la mayoría de los receptores de radio control
+•	Compatible con tarjetas como Arduino y microcontroladores que funcionan a 5 volts.
+Paneles Solares
+ 
+•	Voltaje: 5V.
+•	Corriente: 80mA.
+•	Voltaje en circuito abierto: 6V.
+•	Corriente en cortocircuito: 106mA.
+•	Temperatura de trabajo -20ºC+85ºC
+
+Fotorresistencias
+ 
+•	Max. Tensión externa: Tensión máxima que debe darse continuamente a los componentes en la oscuridad. 
+•	Resistencia oscura: refiérase a la resistencia diez segundos después de que se apague la luz de 10Lux. Max.
+•	Consumo de energía: Máxima potencia a la temperatura ambiental de 25. 
+•	Resistencia a la luz: Irradiada por luz de 400-600Lux durante dos horas, luego probar con 10Lux bajo Fuente de luz estándar A (como temperatura de color 2856K). ?valor: logaritmo de la relación del valor de resistencia estándar en 10Lux y en ese bajo 100Lux.  ? = = Lg (R10 / R100) R10, R100 son las resistencias bajo 10Lux y 100Lux respectivamente.
+
+Arduino Mega 
+ 
+•	Microcontrolador: ATmega2560
+•	Voltaje Operativo: 5V
+•	Voltaje de Entrada: 7-12V
+•	Voltaje de Entrada(límites): 6-20V
+•	Pines digitales de Entrada/Salida: 54 (de los cuales 15 proveen salida PWM)
+•	Pines análogos de entrada: 16
+•	Corriente DC por cada Pin Entrada/Salida: 40 mA
+•	Corriente DC entregada en el Pin 3.3V: 50 mA
+•	Memoria Flash: 256 KB (8KB usados por el bootloader)
+•	SRAM: 8KB
+•	EEPROM: 4KB
+•	Clock Speed: 16 MHz

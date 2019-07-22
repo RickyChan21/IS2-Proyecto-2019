@@ -1,0 +1,1 @@
+CREATE TABLE humedadTierra (estadoH varchar(20),nivelHumedad varchar(20));

@@ -1,0 +1,5 @@
+Crate Table temperaturaControlada (
+temperatura varchar(20)
+estadoCalefaccion varchar(20)
+estadEnfriamiento varchar (20) 
+);
